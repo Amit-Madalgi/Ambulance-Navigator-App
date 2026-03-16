@@ -11,6 +11,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Link, LinkText } from "@/components/ui/link";
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import "@/global.css";
+import { auth } from "@/firebaseConfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !email || !password) {
       toast.show({
         placement: "top",
@@ -33,8 +35,23 @@ export default function RegisterScreen() {
       });
       return;
     }
-    // Add logic here
-    router.push("/(tabs)");
+    
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+      router.push("/(tabs)");
+    } catch (error: any) {
+      toast.show({
+        placement: "top",
+        render: ({ id }) => {
+          return (
+            <Toast nativeID={id} action="error" variant="solid" className="mt-12">
+              <ToastTitle>{error.message || "Failed to register"}</ToastTitle>
+            </Toast>
+          );
+        },
+      });
+    }
   };
 
   return (

@@ -11,6 +11,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Link, LinkText } from "@/components/ui/link";
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import "@/global.css";
+import { auth } from "@/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -18,7 +20,7 @@ export default function IndexScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       toast.show({
         placement: "top",
@@ -32,8 +34,22 @@ export default function IndexScreen() {
       });
       return;
     }
-    // TODO: Add real authentication logic here
-    router.push("/(tabs)"); // Navigate to home screen upon validation
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/(tabs)"); // Navigate to home screen upon validation
+    } catch (error: any) {
+      toast.show({
+        placement: "top",
+        render: ({ id }) => {
+          return (
+            <Toast nativeID={id} action="error" variant="solid" className="mt-12">
+              <ToastTitle>{error.message || "Failed to login"}</ToastTitle>
+            </Toast>
+          );
+        },
+      });
+    }
   };
 
   return (
