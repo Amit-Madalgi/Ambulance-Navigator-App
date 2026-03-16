@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: process.env.DARK_MODE ? process.env.DARK_MODE : 'class',
+  darkMode: 'class',
   content: [
     './app/**/*.{html,js,jsx,ts,tsx,mdx}',
     './components/**/*.{html,js,jsx,ts,tsx,mdx}',
@@ -21,31 +21,31 @@ module.exports = {
       colors: {
         primary: {
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
-          50: 'rgb(var(--color-primary-50)/<alpha-value>)',
-          100: 'rgb(var(--color-primary-100)/<alpha-value>)',
-          200: 'rgb(var(--color-primary-200)/<alpha-value>)',
-          300: 'rgb(var(--color-primary-300)/<alpha-value>)',
-          400: 'rgb(var(--color-primary-400)/<alpha-value>)',
-          500: 'rgb(var(--color-primary-500)/<alpha-value>)',
-          600: 'rgb(var(--color-primary-600)/<alpha-value>)',
-          700: 'rgb(var(--color-primary-700)/<alpha-value>)',
-          800: 'rgb(var(--color-primary-800)/<alpha-value>)',
-          900: 'rgb(var(--color-primary-900)/<alpha-value>)',
-          950: 'rgb(var(--color-primary-950)/<alpha-value>)',
+          50: '#FAD4D8',
+          100: '#F5A9B1',
+          200: '#F07E8A',
+          300: '#EB5363',
+          400: '#E63946',
+          500: '#D62828', // Emergency Red
+          600: '#B02121',
+          700: '#8A1A1A',
+          800: '#641313',
+          900: '#3E0C0C',
+          950: '#2A0808',
         },
         secondary: {
           0: 'rgb(var(--color-secondary-0)/<alpha-value>)',
-          50: 'rgb(var(--color-secondary-50)/<alpha-value>)',
-          100: 'rgb(var(--color-secondary-100)/<alpha-value>)',
-          200: 'rgb(var(--color-secondary-200)/<alpha-value>)',
-          300: 'rgb(var(--color-secondary-300)/<alpha-value>)',
-          400: 'rgb(var(--color-secondary-400)/<alpha-value>)',
-          500: 'rgb(var(--color-secondary-500)/<alpha-value>)',
-          600: 'rgb(var(--color-secondary-600)/<alpha-value>)',
-          700: 'rgb(var(--color-secondary-700)/<alpha-value>)',
-          800: 'rgb(var(--color-secondary-800)/<alpha-value>)',
-          900: 'rgb(var(--color-secondary-900)/<alpha-value>)',
-          950: 'rgb(var(--color-secondary-950)/<alpha-value>)',
+          50: '#E3EDF2',
+          100: '#C7DCE4',
+          200: '#A1C3D2',
+          300: '#7BABC0',
+          400: '#5592AE',
+          500: '#457B9D', // Medical Blue
+          600: '#38637F',
+          700: '#2B4A61',
+          800: '#1D3557', // Deep Navy
+          900: '#122034',
+          950: '#0B131F',
         },
         tertiary: {
           50: 'rgb(var(--color-tertiary-50)/<alpha-value>)',
@@ -123,15 +123,15 @@ module.exports = {
           200: 'rgb(var(--color-typography-200)/<alpha-value>)',
           300: 'rgb(var(--color-typography-300)/<alpha-value>)',
           400: 'rgb(var(--color-typography-400)/<alpha-value>)',
-          500: 'rgb(var(--color-typography-500)/<alpha-value>)',
+          500: '#1A1A24', // Primary Text
           600: 'rgb(var(--color-typography-600)/<alpha-value>)',
           700: 'rgb(var(--color-typography-700)/<alpha-value>)',
           800: 'rgb(var(--color-typography-800)/<alpha-value>)',
           900: 'rgb(var(--color-typography-900)/<alpha-value>)',
           950: 'rgb(var(--color-typography-950)/<alpha-value>)',
           white: '#FFFFFF',
-          gray: '#D4D4D4',
-          black: '#181718',
+          gray: '#6C757D', // Muted Text
+          black: '#1A1A24',
         },
         outline: {
           0: 'rgb(var(--color-outline-0)/<alpha-value>)',
@@ -165,8 +165,8 @@ module.exports = {
           muted: 'rgb(var(--color-background-muted)/<alpha-value>)',
           success: 'rgb(var(--color-background-success)/<alpha-value>)',
           info: 'rgb(var(--color-background-info)/<alpha-value>)',
-          light: '#FBFBFB',
-          dark: '#181719',
+          light: '#F8F9FA', // Off-White
+          dark: '#FFFFFF', // Pure White for Cards
         },
         indicator: {
           primary: 'rgb(var(--color-indicator-primary)/<alpha-value>)',

@@ -1,32 +1,116 @@
-import { Link, LinkText } from "@/components/ui/link";
+import React, { useState } from "react";
+import { KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Center } from "@/components/ui/center";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
+import { Input, InputField } from "@/components/ui/input";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Link, LinkText } from "@/components/ui/link";
+import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
+import "@/global.css";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const toast = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleRegister = () => {
+    if (!name || !email || !password) {
+      toast.show({
+        placement: "top",
+        render: ({ id }) => {
+          return (
+            <Toast nativeID={id} action="error" variant="solid" className="mt-12">
+              <ToastTitle>Please fill all fields.</ToastTitle>
+            </Toast>
+          );
+        },
+      });
+      return;
+    }
+    // Add logic here
+    router.push("/(tabs)");
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register Page</Text>
-      <Link onPress={() => router.push("/")}>
-        <LinkText>Back to Login</LinkText>
-      </Link>
-      <Link onPress={() => router.push("/(tabs)")}>
-        <LinkText>Go to Home</LinkText>
-      </Link>
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+      className="bg-background-light dark:bg-background-dark"
+    >
+      <Center className="flex-1 w-full px-6">
+        <VStack space="xl" className="w-full max-w-[400px]">
+          <Center>
+            <Heading size="3xl" className="text-secondary-800 dark:text-typography-100 mb-2 text-center">
+              Create Account
+            </Heading>
+            <Text size="md" className="text-secondary-600 dark:text-typography-300 mb-8 text-center">
+              Join Ambulance Navigator today.
+            </Text>
+          </Center>
+
+          <VStack space="md">
+            <FormControl>
+              <FormControlLabel>
+                <FormControlLabelText>Full Name</FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  placeholder="Enter your name"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </Input>
+            </FormControl>
+
+            <FormControl>
+              <FormControlLabel>
+                <FormControlLabelText>Email</FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  placeholder="Enter your email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
+              </Input>
+            </FormControl>
+
+            <FormControl>
+              <FormControlLabel>
+                <FormControlLabelText>Password</FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  placeholder="Create a password"
+                  type="password"
+                  secureTextEntry={true}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+              </Input>
+            </FormControl>
+          </VStack>
+
+          <Button size="lg" onPress={handleRegister} className="mt-6">
+            <ButtonText>Register</ButtonText>
+          </Button>
+
+          <Center className="flex-row items-center gap-1.5 mt-4">
+            <Text className="text-secondary-800 dark:text-typography-300">Already have an account?</Text>
+            <Link onPress={() => router.push("/")}>
+              <LinkText className="text-primary-600 font-bold">Log In</LinkText>
+            </Link>
+          </Center>
+        </VStack>
+      </Center>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-});
