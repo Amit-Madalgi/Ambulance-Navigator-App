@@ -1,7 +1,6 @@
-import { useEffect } from "react";
 import { View } from "react-native";
 import { useColorScheme } from "nativewind";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import * as Notifications from 'expo-notifications';
 import "@/global.css";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
@@ -25,8 +24,9 @@ export default function RootLayout() {
         style={{ flex: 1 }}
         className={`bg-background-light dark:bg-background-dark ${colorScheme === 'dark' ? 'dark' : ''}`}
       >
-        <Slot />
+        <Stack screenOptions={{ headerShown: false }} />
       </View>
     </GluestackUIProvider>
   );
 }
+

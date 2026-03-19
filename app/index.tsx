@@ -37,7 +37,7 @@ export default function IndexScreen() {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/(tabs)"); // Navigate to home screen upon validation
+      router.replace("/(tabs)"); // Navigate to home screen upon validation
     } catch (error: any) {
       toast.show({
         placement: "top",

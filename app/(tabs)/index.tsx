@@ -92,8 +92,11 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.replace("/");
+      // Force-reset entire navigation state to login screen
+      router.dismiss();
+      router.replace('/');
     } catch (error: any) {
+      console.error('Logout error:', error);
       toast.show({
         placement: "top",
         render: ({ id }) => <Toast nativeID={id} action="error" variant="solid" className="mt-12"><ToastTitle>{error.message || "Failed to logout"}</ToastTitle></Toast>
@@ -101,15 +104,22 @@ export default function HomeScreen() {
     }
   };
 
-  const handleAccept = async (alertId: string) => {
+  const handleAccept = async (alert: Alert) => {
     try {
-      await remove(ref(database, `alerts/${alertId}`));
+      await remove(ref(database, `alerts/${alert.id}`));
       toast.show({
         placement: "top",
-        render: ({ id }) => <Toast nativeID={id} action="success" variant="solid" className="mt-12"><ToastTitle>Alert Accepted & Removed</ToastTitle></Toast>
+        render: ({ id }) => <Toast nativeID={id} action="success" variant="solid" className="mt-12"><ToastTitle>Alert Accepted — Opening Navigation</ToastTitle></Toast>
       });
+
+      // Navigate to in-app map screen with the alert coordinates
+      router.push(`/map?lat=${alert.lat}&lng=${alert.lng}`);
     } catch (error) {
       console.error(error);
+      toast.show({
+        placement: "top",
+        render: ({ id }) => <Toast nativeID={id} action="error" variant="solid" className="mt-12"><ToastTitle>Failed to accept alert</ToastTitle></Toast>
+      });
     }
   };
 
@@ -174,7 +184,7 @@ export default function HomeScreen() {
                   <Button size="sm" variant="outline" action="secondary" onPress={() => handleDecline(alert.id)}>
                     <ButtonText>Decline</ButtonText>
                   </Button>
-                  <Button size="sm" action="positive" onPress={() => handleAccept(alert.id)}>
+                  <Button size="sm" action="positive" onPress={() => handleAccept(alert)}>
                     <ButtonText>Accept</ButtonText>
                   </Button>
                 </View>
