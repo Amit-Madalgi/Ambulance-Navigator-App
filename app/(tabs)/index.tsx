@@ -8,7 +8,7 @@ import { VStack } from "@/components/ui/vstack";
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import { auth, database } from "@/firebaseConfig";
 import { signOut } from "firebase/auth";
-import { ref, onValue, remove } from "firebase/database";
+import { ref, onValue, remove, update } from "firebase/database";
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
@@ -24,6 +24,7 @@ type Alert = {
   lng: number;
   spo2: number;
   timestampMs: number;
+  status?: string;
 };
 
 export default function HomeScreen() {
@@ -106,7 +107,9 @@ export default function HomeScreen() {
 
   const handleAccept = async (alert: Alert) => {
     try {
-      await remove(ref(database, `alerts/${alert.id}`));
+      await update(ref(database, `alerts/${alert.id}`), {
+        status: 'accepted'
+      });
       toast.show({
         placement: "top",
         render: ({ id }) => <Toast nativeID={id} action="success" variant="solid" className="mt-12"><ToastTitle>Alert Accepted — Opening Navigation</ToastTitle></Toast>
@@ -151,10 +154,12 @@ export default function HomeScreen() {
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <VStack space="md" className="pb-8">
-            {alerts.map((alert) => (
+            {alerts.map((alert) => {
+              const isAccepted = alert.status === 'accepted';
+              return (
               <View 
                 key={alert.id}
-                className="bg-white dark:bg-background-800 rounded-xl p-4 shadow-soft-1 border border-outline-100 dark:border-outline-800"
+                className={`bg-white dark:bg-background-800 rounded-xl p-4 shadow-soft-1 border border-outline-100 dark:border-outline-800 ${isAccepted ? 'opacity-60' : ''}`}
               >
                 <View className="flex-row justify-between items-start mb-2">
                   <VStack>
@@ -181,15 +186,22 @@ export default function HomeScreen() {
                 </View>
 
                 <View className="flex-row gap-2 mt-2 pt-3 border-t border-outline-100 dark:border-outline-800 justify-end">
-                  <Button size="sm" variant="outline" action="secondary" onPress={() => handleDecline(alert.id)}>
-                    <ButtonText>Decline</ButtonText>
-                  </Button>
-                  <Button size="sm" action="positive" onPress={() => handleAccept(alert)}>
-                    <ButtonText>Accept</ButtonText>
-                  </Button>
+                  {isAccepted ? (
+                    <Text className="text-secondary-500 font-medium mr-2 mt-2">Accepted</Text>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="outline" action="secondary" onPress={() => handleDecline(alert.id)}>
+                        <ButtonText>Decline</ButtonText>
+                      </Button>
+                      <Button size="sm" action="positive" onPress={() => handleAccept(alert)}>
+                        <ButtonText>Accept</ButtonText>
+                      </Button>
+                    </>
+                  )}
                 </View>
               </View>
-            ))}
+              );
+            })}
           </VStack>
         </ScrollView>
       )}
