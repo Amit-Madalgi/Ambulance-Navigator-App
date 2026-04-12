@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -15,7 +15,6 @@ import { auth } from "@/firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function RegisterScreen() {
-  const router = useRouter();
   const toast = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,15 +57,15 @@ export default function RegisterScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      className="bg-background-light dark:bg-background-dark"
+      className="bg-background-light"
     >
       <Center className="flex-1 w-full px-6">
         <VStack space="xl" className="w-full max-w-[400px]">
           <Center>
-            <Heading size="3xl" className="text-secondary-800 dark:text-typography-100 mb-2 text-center">
+            <Heading size="3xl" className="text-secondary-800 mb-2 text-center">
               Create Account
             </Heading>
-            <Text size="md" className="text-secondary-600 dark:text-typography-300 mb-8 text-center">
+            <Text size="md" className="text-secondary-600 mb-8 text-center">
               Join Ambulance Navigator today.
             </Text>
           </Center>
@@ -121,7 +120,7 @@ export default function RegisterScreen() {
           </Button>
 
           <Center className="flex-row items-center gap-1.5 mt-4">
-            <Text className="text-secondary-800 dark:text-typography-300">Already have an account?</Text>
+            <Text className="text-secondary-800">Already have an account?</Text>
             <Link onPress={() => router.push("/")}>
               <LinkText className="text-primary-600 font-bold">Log In</LinkText>
             </Link>

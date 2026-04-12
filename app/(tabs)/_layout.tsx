@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { View } from 'react-native';
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
@@ -13,14 +12,14 @@ export default function TabLayout() {
           backgroundColor: colorScheme === 'dark' ? '#1A1A24' : '#FFFFFF',
           borderTopColor: colorScheme === 'dark' ? '#3E0C0C' : '#E3EDF2',
         },
-        tabBarActiveTintColor: '#D62828', // Emergency Red
+        tabBarActiveTintColor: '#D62828',
         tabBarInactiveTintColor: colorScheme === 'dark' ? '#6C757D' : '#A1C3D2',
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Live Alerts',
-          tabBarIcon: () => null, // Provide an icon here if desired
+          tabBarIcon: () => null,
         }}
       />
     </Tabs>

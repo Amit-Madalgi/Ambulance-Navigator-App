@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -12,13 +12,21 @@ import { Link, LinkText } from "@/components/ui/link";
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import "@/global.css";
 import { auth } from "@/firebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
 export default function IndexScreen() {
-  const router = useRouter();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.replace('/(tabs)');
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -56,7 +64,7 @@ export default function IndexScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
-      className="bg-background-light dark:bg-background-dark"
+      className="bg-background-light"
     >
       <Center className="flex-1 w-full px-6">
         <VStack space="xl" className="w-full max-w-[400px]">
@@ -64,7 +72,7 @@ export default function IndexScreen() {
             <Heading size="3xl" className="text-primary-500 mb-2 text-center">
               Ambulance Navigator
             </Heading>
-            <Text size="md" className="text-secondary-600 dark:text-typography-300 mb-8 text-center">
+            <Text size="md" className="text-secondary-600 mb-8 text-center">
               Welcome back! Please login.
             </Text>
           </Center>
@@ -106,7 +114,7 @@ export default function IndexScreen() {
           </Button>
 
           <Center className="flex-row items-center gap-1.5 mt-4">
-            <Text className="text-secondary-800 dark:text-typography-300">Don't have an account?</Text>
+            <Text className="text-secondary-800">Don&apos;t have an account?</Text>
             <Link onPress={() => router.push("/register")}>
               <LinkText className="text-primary-600 font-bold">Register</LinkText>
             </Link>

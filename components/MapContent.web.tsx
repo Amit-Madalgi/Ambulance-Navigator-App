@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Heading } from '@/components/ui/heading';
 
 type MapContentProps = {
   destinationLat: number;
@@ -12,15 +11,22 @@ type MapContentProps = {
 export default function MapContent({ destinationLat, destinationLng, onBack }: MapContentProps) {
   return (
     <View style={styles.container}>
-      <Heading size="lg" style={{ marginBottom: 12 }}>Maps Not Available on Web</Heading>
-      <Text style={{ color: '#666', marginBottom: 20, textAlign: 'center' }}>
-        Please open this app on a mobile device to use the map navigation feature.
-      </Text>
-      <Text style={{ color: '#888', marginBottom: 20 }}>
-        Destination: {destinationLat.toFixed(5)}, {destinationLng.toFixed(5)}
-      </Text>
-      <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-        <Text style={{ color: '#fff', fontWeight: '700' }}>Go Back</Text>
+      <iframe 
+        width="100%" 
+        height="100%" 
+        style={{ border: 0, position: 'absolute', top: 0, left: 0, bottom: 0, right: 0 }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={`https://maps.google.com/maps?q=${destinationLat},${destinationLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+      />
+      
+      {/* Floating Back Button */}
+      <TouchableOpacity 
+        style={styles.floatingBackBtn} 
+        onPress={onBack}
+        activeOpacity={0.8}
+      >
+        <Text style={{ color: '#fff', fontWeight: 'bold' }}>← Back to Alerts</Text>
       </TouchableOpacity>
     </View>
   );
@@ -29,15 +35,23 @@ export default function MapContent({ destinationLat, destinationLng, onBack }: M
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#f8f9fa',
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    backgroundColor: '#e5e5e5',
   },
-  backBtn: {
+  floatingBackBtn: {
+    position: 'absolute',
+    top: 24,
+    left: 24,
     backgroundColor: '#D62828',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
