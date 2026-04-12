@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, ScrollView, Platform } from 'react-native';
 import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
 import { Text } from "@/components/ui/text";
 import { Heading } from "@/components/ui/heading";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -29,6 +31,7 @@ export default function HomeScreen() {
   const toast = useToast();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const previousAlertIds = useRef<Set<string>>(new Set());
+  const navigation = useNavigation();
 
   useEffect(() => {
     const alertsRef = ref(database, 'alerts');
@@ -53,7 +56,7 @@ export default function HomeScreen() {
               duration: 6000,
               render: ({ id }) => (
                 <Toast nativeID={id} action="error" variant="solid" className="mt-12">
-                  <ToastTitle>🚨 NEW: {newAlert.event.toUpperCase()} — {newAlert.deviceId}</ToastTitle>
+                  <ToastTitle>{'\u{1F6A8}'} NEW: {newAlert.event.toUpperCase()} — {newAlert.deviceId}</ToastTitle>
                 </Toast>
               ),
             });
@@ -76,7 +79,19 @@ export default function HomeScreen() {
       if (Platform.OS === 'web') {
         window.location.href = '/';
       } else {
-        router.replace("/");
+        // Get the parent Stack navigator and reset it to the login screen
+        const parent = navigation.getParent();
+        if (parent) {
+          parent.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: "index" }],
+            })
+          );
+        } else {
+          // Fallback
+          router.replace('/');
+        }
       }
     } catch (error: any) {
       console.error('Logout error:', error);
