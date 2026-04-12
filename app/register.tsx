@@ -38,7 +38,7 @@ export default function RegisterScreen() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
-      router.push("/(tabs)");
+      router.replace("/(tabs)");
     } catch (error: any) {
       toast.show({
         placement: "top",

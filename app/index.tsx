@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import React, { useState } from "react";
+import { KeyboardAvoidingView, Platform } from "react-native";
 import { router } from "expo-router";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
@@ -12,21 +12,12 @@ import { Link, LinkText } from "@/components/ui/link";
 import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import "@/global.css";
 import { auth } from "@/firebaseConfig";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function IndexScreen() {
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace('/(tabs)');
-      }
-    });
-    return unsubscribe;
-  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -45,7 +36,7 @@ export default function IndexScreen() {
     
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/(tabs)"); // Navigate to home screen upon validation
+      router.replace("/(tabs)");
     } catch (error: any) {
       toast.show({
         placement: "top",

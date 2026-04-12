@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, Platform } from 'react-native';
 import { router } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Heading } from "@/components/ui/heading";
@@ -73,15 +73,11 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <Toast nativeID={id} action="info" variant="solid" className="mt-12">
-            <ToastTitle>Logged out successfully</ToastTitle>
-          </Toast>
-        ),
-      });
-      router.replace("/");
+      if (Platform.OS === 'web') {
+        window.location.href = '/';
+      } else {
+        router.replace("/");
+      }
     } catch (error: any) {
       console.error('Logout error:', error);
       toast.show({
