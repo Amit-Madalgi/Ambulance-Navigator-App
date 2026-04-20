@@ -1,16 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, ScrollView, Platform } from 'react-native';
-import { router } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
-import { CommonActions } from "@react-navigation/native";
-import { Text } from "@/components/ui/text";
-import { Heading } from "@/components/ui/heading";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Heading } from "@/components/ui/heading";
+import { Text } from "@/components/ui/text";
+import { Toast, ToastTitle, useToast } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { useToast, Toast, ToastTitle } from "@/components/ui/toast";
 import { auth, database } from "@/firebaseConfig";
+import { CommonActions, useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { ref, onValue, remove, update } from "firebase/database";
+import { onValue, ref, remove, update } from "firebase/database";
+import React, { useEffect, useRef, useState } from "react";
+import { Platform, ScrollView, View } from "react-native";
 
 type Alert = {
   id: string;
@@ -34,7 +33,7 @@ export default function HomeScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    const alertsRef = ref(database, 'alerts');
+    const alertsRef = ref(database, "alerts");
     const unsubscribe = onValue(alertsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -47,23 +46,32 @@ export default function HomeScreen() {
         setAlerts(alertsList);
 
         // Check for new alerts and show in-app notification
-        const currentAlertIds = new Set(alertsList.map(a => a.id));
+        const currentAlertIds = new Set(alertsList.map((a) => a.id));
         if (previousAlertIds.current.size > 0) {
-          const newAlerts = alertsList.filter(a => !previousAlertIds.current.has(a.id));
-          newAlerts.forEach(newAlert => {
+          const newAlerts = alertsList.filter(
+            (a) => !previousAlertIds.current.has(a.id),
+          );
+          newAlerts.forEach((newAlert) => {
             toast.show({
               placement: "top",
               duration: 6000,
               render: ({ id }) => (
-                <Toast nativeID={id} action="error" variant="solid" className="mt-12">
-                  <ToastTitle>{'\u{1F6A8}'} NEW: {newAlert.event.toUpperCase()} — {newAlert.deviceId}</ToastTitle>
+                <Toast
+                  nativeID={id}
+                  action="error"
+                  variant="solid"
+                  className="mt-12"
+                >
+                  <ToastTitle>
+                    {"\u{1F6A8}"} NEW: {newAlert.event.toUpperCase()} —{" "}
+                    {newAlert.deviceId}
+                  </ToastTitle>
                 </Toast>
               ),
             });
           });
         }
         previousAlertIds.current = currentAlertIds;
-
       } else {
         setAlerts([]);
         previousAlertIds.current = new Set();
@@ -76,8 +84,8 @@ export default function HomeScreen() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      if (Platform.OS === 'web') {
-        window.location.href = '/';
+      if (Platform.OS === "web") {
+        window.location.href = "/";
       } else {
         // Get the parent Stack navigator and reset it to the login screen
         const parent = navigation.getParent();
@@ -86,15 +94,15 @@ export default function HomeScreen() {
             CommonActions.reset({
               index: 0,
               routes: [{ name: "index" }],
-            })
+            }),
           );
         } else {
           // Fallback
-          router.replace('/');
+          router.replace("/");
         }
       }
     } catch (error: any) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       toast.show({
         placement: "top",
         render: ({ id }) => (
@@ -109,12 +117,17 @@ export default function HomeScreen() {
   const handleAccept = async (alert: Alert) => {
     try {
       await update(ref(database, `alerts/${alert.id}`), {
-        status: 'accepted'
+        status: "accepted",
       });
       toast.show({
         placement: "top",
         render: ({ id }) => (
-          <Toast nativeID={id} action="success" variant="solid" className="mt-12">
+          <Toast
+            nativeID={id}
+            action="success"
+            variant="solid"
+            className="mt-12"
+          >
             <ToastTitle>Alert Accepted — Opening Navigation</ToastTitle>
           </Toast>
         ),
@@ -154,7 +167,9 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1 }} className="bg-background-light pt-12 px-4">
       <View className="flex-row justify-between items-center mb-6">
-        <Heading size="2xl" className="text-secondary-800">Live Alerts</Heading>
+        <Heading size="2xl" className="text-secondary-800">
+          Live Alerts
+        </Heading>
         <Button size="sm" variant="outline" onPress={handleLogout}>
           <ButtonText>Logout</ButtonText>
         </Button>
@@ -162,7 +177,9 @@ export default function HomeScreen() {
 
       {alerts.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-secondary-500">No active alerts right now.</Text>
+          <Text className="text-secondary-500">
+            No active alerts right now.
+          </Text>
         </View>
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -176,8 +193,15 @@ export default function HomeScreen() {
                 >
                   <View className="flex-row justify-between items-start mb-2">
                     <VStack>
-                      <Heading size="md" className="text-error-600 uppercase tracking-widest">{alert.event}</Heading>
-                      <Text size="sm" className="text-secondary-500 font-bold">{alert.deviceId}</Text>
+                      <Heading
+                        size="md"
+                        className="text-error-600 uppercase tracking-widest"
+                      >
+                        {alert.event}
+                      </Heading>
+                      <Text size="sm" className="text-secondary-500 font-bold">
+                        {alert.deviceId}
+                      </Text>
                     </VStack>
                     <Text size="xs" className="text-secondary-400">
                       {new Date(alert.timestampMs).toLocaleTimeString()}
@@ -186,27 +210,45 @@ export default function HomeScreen() {
 
                   <View className="flex-row gap-3 my-3 flex-wrap">
                     <View className="bg-error-50 px-3 py-1.5 rounded-md">
-                      <Text size="sm" className="text-error-700 font-medium">BPM: {alert.heartRate}</Text>
+                      <Text size="sm" className="text-error-700 font-medium">
+                        BPM: {alert.heartRate}
+                      </Text>
                     </View>
                     <View className="bg-info-50 px-3 py-1.5 rounded-md">
-                      <Text size="sm" className="text-info-700 font-medium">SpO2: {alert.spo2}%</Text>
+                      <Text size="sm" className="text-info-700 font-medium">
+                        SpO2: {alert.spo2}%
+                      </Text>
                     </View>
                     <View className="bg-success-50 px-3 py-1.5 rounded-md">
                       <Text size="sm" className="text-success-700 font-medium">
-                        GPS: {alert.gpsValid ? `${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}` : "Invalid"}
+                        GPS:{" "}
+                        {alert.gpsValid
+                          ? `${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}`
+                          : "Invalid"}
                       </Text>
                     </View>
                   </View>
 
                   <View className="flex-row gap-2 mt-2 pt-3 border-t border-outline-100 justify-end">
                     {isAccepted ? (
-                      <Text className="text-secondary-500 font-medium mr-2 mt-2">Accepted</Text>
+                      <Text className="text-secondary-500 font-medium mr-2 mt-2">
+                        Accepted
+                      </Text>
                     ) : (
                       <>
-                        <Button size="sm" variant="outline" action="secondary" onPress={() => handleDecline(alert.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          action="secondary"
+                          onPress={() => handleDecline(alert.id)}
+                        >
                           <ButtonText>Decline</ButtonText>
                         </Button>
-                        <Button size="sm" action="positive" onPress={() => handleAccept(alert)}>
+                        <Button
+                          size="sm"
+                          action="positive"
+                          onPress={() => handleAccept(alert)}
+                        >
                           <ButtonText>Accept</ButtonText>
                         </Button>
                       </>
