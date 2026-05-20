@@ -4,10 +4,11 @@ import MapContent from '@/components/MapContent';
 
 export default function MapScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ lat: string; lng: string }>();
+  const params = useLocalSearchParams<{ lat: string; lng: string; id: string }>();
 
   return (
     <MapContent
+      alertId={params.id}
       destinationLat={parseFloat(params.lat || '0')}
       destinationLng={parseFloat(params.lng || '0')}
       onBack={() => router.back()}

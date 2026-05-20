@@ -1,5 +1,6 @@
 declare module '@/components/MapContent' {
   type MapContentProps = {
+    alertId?: string;
     destinationLat: number;
     destinationLng: number;
     onBack: () => void;

@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { WebView } from "react-native-webview";
+import { router } from "expo-router";
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -27,6 +28,7 @@ type HospitalInfo = {
 };
 
 type MapContentProps = {
+  alertId?: string;
   destinationLat: number;
   destinationLng: number;
   onBack: () => void;
@@ -201,6 +203,7 @@ function generateMapHTML(
 }
 
 export default function MapContent({
+  alertId,
   destinationLat,
   destinationLng,
   onBack,
@@ -542,6 +545,16 @@ export default function MapContent({
             </Text>
           )}
         </TouchableOpacity>
+        {alertId && (
+          <TouchableOpacity
+            style={[styles.vitalsBtn, { marginTop: 8 }]}
+            onPress={() => router.push(`/vitals?id=${alertId}`)}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+              {"\u{1F48C}"} View Patient Vitals & Graph
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -674,6 +687,12 @@ const styles = StyleSheet.create({
   },
   navigateBtn: {
     backgroundColor: "#D62828",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  vitalsBtn: {
+    backgroundColor: "#7C3AED",
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

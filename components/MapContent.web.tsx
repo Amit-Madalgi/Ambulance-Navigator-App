@@ -2,16 +2,18 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Heading } from '@/components/ui/heading';
+import { router } from 'expo-router';
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 type MapContentProps = {
+  alertId?: string;
   destinationLat: number;
   destinationLng: number;
   onBack: () => void;
 };
 
-export default function MapContent({ destinationLat, destinationLng, onBack }: MapContentProps) {
+export default function MapContent({ alertId, destinationLat, destinationLng, onBack }: MapContentProps) {
   // Show embedded map with the accident location and nearby hospitals
   const mapSrc = `https://maps.google.com/maps?q=hospital+emergency+near+${destinationLat},${destinationLng}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
 
@@ -80,9 +82,16 @@ export default function MapContent({ destinationLat, destinationLng, onBack }: M
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#D62828' }]} onPress={openNavigation} activeOpacity={0.8}>
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>
-              {'\u{1F9ED}'} Navigate to Hospital
+              {'\u{1F9ED}'} Navigate
             </Text>
           </TouchableOpacity>
+          {alertId && (
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => router.push(`/vitals?id=${alertId}`)} activeOpacity={0.8}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 12 }}>
+                {'\u{1F48C}'} Live Vitals
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
