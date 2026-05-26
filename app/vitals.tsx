@@ -235,13 +235,13 @@ export default function VitalsScreen() {
               {gridLines}
               
               {/* Wave Glow (duplicate with thicker stroke & opacity) */}
-              {ppgPath && (
+              {ppgPath ? (
                 <Path d={ppgPath} fill="none" stroke="rgba(239, 68, 68, 0.15)" strokeWidth={7} />
-              )}
+              ) : null}
               {/* Main Line */}
-              {ppgPath && (
+              {ppgPath ? (
                 <Path d={ppgPath} fill="none" stroke="#EF4444" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-              )}
+              ) : null}
             </Svg>
           </View>
         </View>
@@ -259,13 +259,13 @@ export default function VitalsScreen() {
               {gridLines}
               
               {/* Wave Glow */}
-              {spo2Path && (
+              {spo2Path ? (
                 <Path d={spo2Path} fill="none" stroke="rgba(6, 182, 212, 0.15)" strokeWidth={7} />
-              )}
+              ) : null}
               {/* Main Line */}
-              {spo2Path && (
+              {spo2Path ? (
                 <Path d={spo2Path} fill="none" stroke="#06B6D4" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-              )}
+              ) : null}
             </Svg>
           </View>
         </View>
