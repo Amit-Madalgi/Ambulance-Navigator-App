@@ -41,9 +41,9 @@ export default function VitalsScreen() {
           deviceId: data.deviceId || "Wearable Device",
         });
 
-        // Vitals: check patient_vitals, fall back to initial alert vitals
-        const hrVal = data.patient_vitals?.hr ?? data.heartRate ?? 75;
-        const spo2Val = data.patient_vitals?.spo2 ?? data.spo2 ?? 98;
+        // Vitals: check patient_vitals (handles both hr and bpm formats), fall back to initial alert vitals or 0
+        const hrVal = Math.max(data.patient_vitals?.hr || 0, data.patient_vitals?.bpm || 0) || data.heartRate || 0;
+        const spo2Val = data.patient_vitals?.spo2 || data.spo2 || 0;
         
         setVitals({
           hr: hrVal,

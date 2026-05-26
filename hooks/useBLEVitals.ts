@@ -52,7 +52,11 @@ export function useBLEVitals() {
   useEffect(() => {
     if (Platform.OS === "web") return;
 
-    managerRef.current = new BleManager();
+    try {
+      managerRef.current = new BleManager();
+    } catch (error) {
+      console.warn("BLE native module not available. BLE features disabled.");
+    }
 
     return () => {
       // Cleanup on unmount
@@ -93,11 +97,11 @@ export function useBLEVitals() {
     return true; // iOS doesn't need runtime permissions for BLE
   }, []);
 
-  // Parse "HR=78.4,SpO2=97.2" from ESP32
+  // Parse "BPM:78.4,SpO2:97.2" or "HR=78.4,SpO2=97.2" from ESP32
   const parseVitals = useCallback((raw: string): Vitals | null => {
     try {
-      const hrMatch = raw.match(/HR=([\d.]+)/);
-      const spo2Match = raw.match(/SpO2=([\d.]+)/);
+      const hrMatch = raw.match(/(?:HR|BPM)[:=]([\d.]+)/i);
+      const spo2Match = raw.match(/SpO2[:=]([\d.]+)/i);
 
       if (hrMatch && spo2Match) {
         return {
