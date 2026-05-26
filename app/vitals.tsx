@@ -164,7 +164,7 @@ export default function VitalsScreen() {
         </TouchableOpacity>
         
         <View className="flex-row items-center bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800">
-          <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+          <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2" />
           <Text className="text-emerald-500 font-bold text-xs uppercase tracking-wider">Live Connected</Text>
         </View>
       </View>
