@@ -73,6 +73,11 @@ export default function HomeScreen() {
   // BLE wearable connection
   const ble = useBLEVitals();
 
+  // Auto-start scanning for the ESP32 wearable when the app opens
+  useEffect(() => {
+    ble.startScan();
+  }, [ble.startScan]);
+
   // Nearest Location Name Cache
   const [locationNames, setLocationNames] = useState<Record<string, string>>({});
 
