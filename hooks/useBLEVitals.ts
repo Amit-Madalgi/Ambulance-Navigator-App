@@ -38,6 +38,7 @@ export function useBLEVitals() {
   const deviceRef = useRef<Device | null>(null);
   const subscriptionRef = useRef<Subscription | null>(null);
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeCrashIdRef = useRef<string | null>(null);
 
   const [state, setState] = useState<BLEVitalsState>({
     vitals: { hr: 0, spo2: 0 },
@@ -133,6 +134,7 @@ export function useBLEVitals() {
 
   // Set the active crash ID to bind vitals to
   const setActiveCrashId = useCallback((crashId: string | null) => {
+    activeCrashIdRef.current = crashId;
     setState((prev) => ({ ...prev, activeCrashId: crashId }));
   }, []);
 
@@ -234,17 +236,16 @@ export function useBLEVitals() {
               const vitals = parseVitals(raw);
 
               if (vitals) {
-                setState((prev) => {
-                  // Post to Firebase if there's an active crash
-                  if (prev.activeCrashId) {
-                    postToFirebase(vitals, prev.activeCrashId);
-                  }
+                // Post to Firebase using the ref (always has latest value)
+                const crashId = activeCrashIdRef.current;
+                if (crashId) {
+                  postToFirebase(vitals, crashId);
+                }
 
-                  return {
-                    ...prev,
-                    vitals,
-                  };
-                });
+                setState((prev) => ({
+                  ...prev,
+                  vitals,
+                }));
               }
             }
           },
