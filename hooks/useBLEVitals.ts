@@ -170,22 +170,7 @@ export function useBLEVitals() {
     // Stop any previous scan
     manager.stopDeviceScan();
 
-    // Set scan timeout
-    scanTimeoutRef.current = setTimeout(() => {
-      manager.stopDeviceScan();
-      setState((prev) => {
-        if (prev.isScanning && !prev.isConnected) {
-          return {
-            ...prev,
-            isScanning: false,
-            error: "Device not found. Make sure HealthMonitor_ESP32 is powered on.",
-          };
-        }
-        return prev;
-      });
-    }, SCAN_TIMEOUT_MS);
-
-    // Start scanning
+    // Start scanning indefinitely until the device is found
     manager.startDeviceScan(null, null, async (error, device) => {
       if (error) {
         console.error("Scan error:", error);
@@ -197,7 +182,8 @@ export function useBLEVitals() {
         return;
       }
 
-      if (device?.name === DEVICE_NAME || device?.localName === DEVICE_NAME) {
+      const hasTargetService = (device?.serviceUUIDs?.map(id => id.toLowerCase()) || []).includes(NUS_SERVICE_UUID.toLowerCase());
+      if (device?.name === DEVICE_NAME || device?.localName === DEVICE_NAME || hasTargetService) {
         // Found the device — stop scanning and connect
         manager.stopDeviceScan();
         if (scanTimeoutRef.current) {
