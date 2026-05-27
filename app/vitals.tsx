@@ -8,8 +8,10 @@ import { ref, onValue } from "firebase/database";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Svg, { Path, Line } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBLE } from "@/hooks/useBLEVitals";
 
 export default function VitalsScreen() {
+  const ble = useBLE();
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const alertId = params.id;
@@ -169,9 +171,11 @@ export default function VitalsScreen() {
           <Text className="text-secondary-700 font-bold text-sm">{"\u2190"} Back</Text>
         </TouchableOpacity>
         
-        <View className="flex-row items-center bg-success-50 px-3 py-1.5 rounded-full border border-success-200">
-          <View className="w-2.5 h-2.5 rounded-full bg-success-500 mr-2" />
-          <Text className="text-success-700 font-bold text-xs uppercase tracking-wider">Live Connected</Text>
+        <View className={`flex-row items-center px-3 py-1.5 rounded-full border ${ble.isConnected ? 'bg-success-50 border-success-200' : (ble.isScanning ? 'bg-warning-50 border-warning-200' : 'bg-error-50 border-error-200')}`}>
+          <View className={`w-2.5 h-2.5 rounded-full mr-2 ${ble.isConnected ? 'bg-success-500' : (ble.isScanning ? 'bg-warning-500' : 'bg-error-500')}`} />
+          <Text className={`font-bold text-xs uppercase tracking-wider ${ble.isConnected ? 'text-success-700' : (ble.isScanning ? 'text-warning-700' : 'text-error-700')}`}>
+            {ble.isConnected ? "Live Connected" : (ble.isScanning ? "Scanning..." : "Offline")}
+          </Text>
         </View>
       </View>
 

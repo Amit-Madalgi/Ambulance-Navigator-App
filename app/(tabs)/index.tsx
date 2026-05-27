@@ -4,7 +4,7 @@ import { Text } from "@/components/ui/text";
 import { Toast, ToastTitle, useToast } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import { auth, database } from "@/firebaseConfig";
-import { useBLEVitals } from "@/hooks/useBLEVitals";
+import { useBLE } from "@/hooks/useBLEVitals";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
@@ -70,13 +70,8 @@ export default function HomeScreen() {
   const previousAlertIds = useRef<Set<string>>(new Set());
   const navigation = useNavigation();
 
-  // BLE wearable connection
-  const ble = useBLEVitals();
-
-  // Auto-start scanning for the ESP32 wearable when the app opens
-  useEffect(() => {
-    ble.startScan();
-  }, [ble.startScan]);
+  // BLE wearable connection (auto-started by BLEProvider at the root level)
+  const ble = useBLE();
 
   // Nearest Location Name Cache
   const [locationNames, setLocationNames] = useState<Record<string, string>>({});
@@ -148,33 +143,7 @@ export default function HomeScreen() {
         alertsList.sort((a, b) => b.timestampMs - a.timestampMs);
         setAlerts(alertsList);
 
-        // Check for new alerts and show in-app notification
-        const currentAlertIds = new Set(alertsList.map((a) => a.id));
-        if (previousAlertIds.current.size > 0) {
-          const newAlerts = alertsList.filter(
-            (a) => !previousAlertIds.current.has(a.id),
-          );
-          newAlerts.forEach((newAlert) => {
-            toast.show({
-              placement: "top",
-              duration: 6000,
-              render: ({ id }) => (
-                <Toast
-                  nativeID={id}
-                  action="error"
-                  variant="solid"
-                  className="mt-12"
-                >
-                  <ToastTitle>
-                    {"\u{1F6A8}"} NEW: {newAlert.event.toUpperCase()} —{" "}
-                    {newAlert.deviceId}
-                  </ToastTitle>
-                </Toast>
-              ),
-            });
-          });
-        }
-        previousAlertIds.current = currentAlertIds;
+        // (System-level notifications are now handled globally by useNotifications)
       } else {
         setAlerts([]);
         previousAlertIds.current = new Set();
@@ -277,9 +246,16 @@ export default function HomeScreen() {
         <Heading size="2xl" className="text-secondary-800">
           Live Alerts
         </Heading>
-        <Button size="sm" variant="outline" onPress={handleLogout}>
-          <ButtonText>Logout</ButtonText>
-        </Button>
+        <View className="flex-row items-center gap-3">
+          <View className={`px-2 py-1 rounded-md ${ble.isConnected ? 'bg-success-100 border border-success-200' : (ble.isScanning ? 'bg-warning-100 border border-warning-200' : 'bg-error-100 border border-error-200')}`}>
+            <Text className={`text-[10px] font-bold uppercase tracking-wider ${ble.isConnected ? 'text-success-700' : (ble.isScanning ? 'text-warning-700' : 'text-error-700')}`}>
+              {ble.isConnected ? "🟢 Watch Connected" : (ble.isScanning ? "🟡 Scanning Watch..." : "🔴 Watch Offline")}
+            </Text>
+          </View>
+          <Button size="sm" variant="outline" onPress={handleLogout}>
+            <ButtonText>Logout</ButtonText>
+          </Button>
+        </View>
       </View>
 
       {alerts.length === 0 ? (

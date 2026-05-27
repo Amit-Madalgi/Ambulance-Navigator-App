@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Platform, PermissionsAndroid } from "react-native";
 import { BleManager, Device, Subscription } from "react-native-ble-plx";
 import { database } from "@/firebaseConfig";
@@ -7,6 +7,21 @@ import { ref, update } from "firebase/database";
 // Nordic UART Service UUIDs (must match ESP32 sketch)
 const NUS_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const NUS_TX_CHAR_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"; // ESP32 -> Phone (NOTIFY)
+
+// Base64 polyfill for React Native Android
+function decodeBase64(input: string) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let str = input.replace(/=+$/, '');
+  let output = '';
+  for (let bc = 0, bs = 0, buffer, i = 0;
+    buffer = str.charAt(i++);
+    ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
+      bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
+  ) {
+    buffer = chars.indexOf(buffer);
+  }
+  return output;
+}
 
 const DEVICE_NAME = "HealthMonitor_ESP32";
 const SCAN_TIMEOUT_MS = 15000;
@@ -172,7 +187,36 @@ export function useBLEVitals() {
     // Stop any previous scan
     manager.stopDeviceScan();
 
-    // Start scanning indefinitely until the device is found
+    try {
+      // 1. Ask Android if the ESP32 is already connected in the phone's background settings
+      const connectedDevices = await manager.connectedDevices([
+        NUS_SERVICE_UUID,
+        "12345678-1234-5678-1234-56789abcdef0" // Fallback to the UUID from test_ble.ino just in case
+      ]);
+      
+      // We can also check by exact MAC address if we knew it, but connectedDevices usually requires UUIDs.
+      // If we find a connected device that matches our name or UUID:
+      const targetDevice = connectedDevices.find(d => 
+        d.name === DEVICE_NAME || 
+        d.localName === DEVICE_NAME || 
+        (d.serviceUUIDs && d.serviceUUIDs.includes(NUS_SERVICE_UUID))
+      );
+
+      if (targetDevice) {
+        setState((prev) => ({
+          ...prev,
+          isScanning: false,
+          deviceName: targetDevice.name || targetDevice.localName || DEVICE_NAME,
+        }));
+        
+        connectToDevice(targetDevice);
+        return; // Exit here, do not start scanning!
+      }
+    } catch (e) {
+      console.warn("Failed to check connected devices:", e);
+    }
+
+    // 2. If it wasn't already connected, start scanning indefinitely until found
     manager.startDeviceScan(null, null, async (error, device) => {
       if (error) {
         console.error("Scan error:", error);
@@ -231,8 +275,8 @@ export function useBLEVitals() {
             }
 
             if (characteristic?.value) {
-              // BLE data comes as base64
-              const raw = atob(characteristic.value);
+              // BLE data comes as base64, React Native lacks atob()
+              const raw = decodeBase64(characteristic.value);
               const vitals = parseVitals(raw);
 
               if (vitals) {
@@ -267,7 +311,7 @@ export function useBLEVitals() {
     [parseVitals, postToFirebase],
   );
 
-  // Handle device disconnection
+  // Handle device disconnection — auto-reconnect after 3 seconds
   const handleDisconnect = useCallback(() => {
     subscriptionRef.current?.remove();
     subscriptionRef.current = null;
@@ -277,9 +321,14 @@ export function useBLEVitals() {
       ...prev,
       isConnected: false,
       vitals: { hr: 0, spo2: 0 },
-      error: "Device disconnected",
+      error: "Device disconnected — reconnecting...",
     }));
-  }, []);
+
+    // Auto-reconnect after 3 seconds
+    setTimeout(() => {
+      startScan();
+    }, 3000);
+  }, [startScan]);
 
   // Manually disconnect
   const disconnect = useCallback(async () => {
@@ -317,3 +366,31 @@ export function useBLEVitals() {
     setActiveCrashId,
   };
 }
+
+type BLEContextType = ReturnType<typeof useBLEVitals>;
+
+const BLEContext = createContext<BLEContextType | null>(null);
+
+export function BLEProvider({ children }: { children: ReactNode }) {
+  const bleState = useBLEVitals();
+
+  // Auto-start scanning when the provider mounts (app opens)
+  useEffect(() => {
+    bleState.startScan();
+  }, []);
+
+  return (
+    <BLEContext.Provider value={bleState}>
+      {children}
+    </BLEContext.Provider>
+  );
+}
+
+export function useBLE() {
+  const context = useContext(BLEContext);
+  if (!context) {
+    throw new Error("useBLE must be used within a BLEProvider");
+  }
+  return context;
+}
+
