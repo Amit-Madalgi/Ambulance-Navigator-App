@@ -9,9 +9,12 @@ import { CommonActions, useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
 import { onValue, ref, remove, update } from "firebase/database";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, View } from "react-native";
 import * as Location from "expo-location";
+
+// Alerts auto-expire after 5 minutes if not accepted
+const ALERT_EXPIRY_MS = 5 * 60 * 1000;
 
 
 type Alert = {
@@ -67,6 +70,7 @@ function getPredefinedMockLocation(lat: number, lng: number): string {
 export default function HomeScreen() {
   const toast = useToast();
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [now, setNow] = useState(Date.now());
   const previousAlertIds = useRef<Set<string>>(new Set());
   const navigation = useNavigation();
 
@@ -130,6 +134,12 @@ export default function HomeScreen() {
     });
   }, [alerts, locationNames]);
 
+  // Tick every second for live countdown / elapsed time
+  useEffect(() => {
+    const ticker = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(ticker);
+  }, []);
+
   useEffect(() => {
     const alertsRef = ref(database, "alerts");
     const unsubscribe = onValue(alertsRef, (snapshot) => {
@@ -142,6 +152,14 @@ export default function HomeScreen() {
         // Sort by newest first
         alertsList.sort((a, b) => b.timestampMs - a.timestampMs);
         setAlerts(alertsList);
+
+        // Auto-remove expired pending alerts from Firebase
+        const currentTime = Date.now();
+        alertsList.forEach((alert) => {
+          if (alert.status !== "accepted" && (currentTime - alert.timestampMs) >= ALERT_EXPIRY_MS) {
+            remove(ref(database, `alerts/${alert.id}`)).catch(console.error);
+          }
+        });
 
         // (System-level notifications are now handled globally by useNotifications)
       } else {
@@ -240,25 +258,56 @@ export default function HomeScreen() {
     }
   };
 
+  // Format helpers for timer display
+  const formatElapsed = useCallback((timestampMs: number) => {
+    const diffSec = Math.max(0, Math.floor((now - timestampMs) / 1000));
+    if (diffSec < 60) return `${diffSec}s ago`;
+    const mins = Math.floor(diffSec / 60);
+    const secs = diffSec % 60;
+    return `${mins}m ${secs}s ago`;
+  }, [now]);
+
+  const formatCountdown = useCallback((timestampMs: number) => {
+    const remainMs = Math.max(0, ALERT_EXPIRY_MS - (now - timestampMs));
+    const mins = Math.floor(remainMs / 60000);
+    const secs = Math.floor((remainMs % 60000) / 1000);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  }, [now]);
+
+  const getCountdownUrgency = useCallback((timestampMs: number) => {
+    const remainMs = ALERT_EXPIRY_MS - (now - timestampMs);
+    if (remainMs <= 60000) return "critical"; // last 1 min
+    if (remainMs <= 120000) return "warning"; // last 2 min
+    return "normal";
+  }, [now]);
+
+  // Filter out expired pending alerts from display
+  const activeAlerts = alerts.filter((alert) => {
+    if (alert.status === "accepted") return true;
+    return (now - alert.timestampMs) < ALERT_EXPIRY_MS;
+  });
+
   return (
     <View style={{ flex: 1 }} className="bg-background-light pt-12 px-4">
-      <View className="flex-row justify-between items-center mb-6">
-        <Heading size="2xl" className="text-secondary-800">
-          Live Alerts
-        </Heading>
-        <View className="flex-row items-center gap-3">
+      <View className="mb-6">
+        <View className="flex-row justify-between items-center">
+          <Heading size="2xl" className="text-secondary-800 flex-shrink">
+            Live Alerts
+          </Heading>
+          <Button size="sm" variant="outline" onPress={handleLogout}>
+            <ButtonText>Logout</ButtonText>
+          </Button>
+        </View>
+        <View className="flex-row items-center mt-2">
           <View className={`px-2 py-1 rounded-md ${ble.isConnected ? 'bg-success-100 border border-success-200' : (ble.isScanning ? 'bg-warning-100 border border-warning-200' : 'bg-error-100 border border-error-200')}`}>
             <Text className={`text-[10px] font-bold uppercase tracking-wider ${ble.isConnected ? 'text-success-700' : (ble.isScanning ? 'text-warning-700' : 'text-error-700')}`}>
               {ble.isConnected ? "🟢 Watch Connected" : (ble.isScanning ? "🟡 Scanning Watch..." : "🔴 Watch Offline")}
             </Text>
           </View>
-          <Button size="sm" variant="outline" onPress={handleLogout}>
-            <ButtonText>Logout</ButtonText>
-          </Button>
         </View>
       </View>
 
-      {alerts.length === 0 ? (
+      {activeAlerts.length === 0 ? (
         <View className="flex-1 justify-center items-center">
           <Text className="text-secondary-500">
             No active alerts right now.
@@ -267,12 +316,13 @@ export default function HomeScreen() {
       ) : (
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <VStack space="md" className="pb-8">
-            {alerts.map((alert) => {
+            {activeAlerts.map((alert) => {
               const isAccepted = alert.status === "accepted";
+              const urgency = !isAccepted ? getCountdownUrgency(alert.timestampMs) : "normal";
               return (
                 <View
                   key={alert.id}
-                  className={`bg-white rounded-xl p-4 shadow-soft-1 border border-outline-100 ${isAccepted ? "opacity-60" : ""}`}
+                  className={`bg-white rounded-xl p-4 shadow-soft-1 border ${isAccepted ? "border-outline-100 opacity-60" : urgency === "critical" ? "border-error-300" : "border-outline-100"}`}
                 >
                   <View className="flex-row justify-between items-start mb-2">
                     <VStack>
@@ -286,10 +336,27 @@ export default function HomeScreen() {
                         {alert.deviceId}
                       </Text>
                     </VStack>
-                    <Text size="xs" className="text-secondary-400">
-                      {new Date(alert.timestampMs).toLocaleTimeString()}
-                    </Text>
+                    <VStack className="items-end">
+                      <Text size="xs" className="text-secondary-400">
+                        {new Date(alert.timestampMs).toLocaleTimeString()}
+                      </Text>
+                      <Text size="xs" className="text-secondary-500 font-medium mt-0.5">
+                        {"⏱ "}{formatElapsed(alert.timestampMs)}
+                      </Text>
+                    </VStack>
                   </View>
+
+                  {/* Countdown timer — only for pending alerts */}
+                  {!isAccepted && (
+                    <View className={`flex-row items-center justify-between px-3 py-2 rounded-lg mb-2 ${urgency === "critical" ? "bg-error-50 border border-error-200" : urgency === "warning" ? "bg-warning-50 border border-warning-200" : "bg-secondary-50 border border-outline-100"}`}>
+                      <Text className={`text-[10px] font-bold uppercase tracking-wider ${urgency === "critical" ? "text-error-600" : urgency === "warning" ? "text-warning-700" : "text-secondary-500"}`}>
+                        {urgency === "critical" ? "⚠ Expiring Soon" : "Expires In"}
+                      </Text>
+                      <Text className={`text-sm font-black tabular-nums ${urgency === "critical" ? "text-error-600" : urgency === "warning" ? "text-warning-700" : "text-secondary-700"}`}>
+                        {formatCountdown(alert.timestampMs)}
+                      </Text>
+                    </View>
+                  )}
 
                   <View className="flex-row gap-3 my-3 flex-wrap">
                     {/* BPM and SpO2 are commented out per instructions

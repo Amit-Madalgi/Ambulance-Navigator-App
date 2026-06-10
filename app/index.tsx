@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Center } from "@/components/ui/center";
 import { Heading } from "@/components/ui/heading";
@@ -18,6 +18,7 @@ export default function IndexScreen() {
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -88,14 +89,18 @@ export default function IndexScreen() {
               <FormControlLabel>
                 <FormControlLabelText>Password</FormControlLabelText>
               </FormControlLabel>
-              <Input>
+              <Input className="flex-row items-center">
                 <InputField
                   placeholder="Enter your password"
-                  type="password"
-                  secureTextEntry={true}
+                  type={showPassword ? "text" : "password"}
+                  secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
+                  className="flex-1"
                 />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ paddingHorizontal: 12 }}>
+                  <Text className="text-secondary-500 text-sm font-semibold">{showPassword ? "Hide" : "Show"}</Text>
+                </TouchableOpacity>
               </Input>
             </FormControl>
           </VStack>

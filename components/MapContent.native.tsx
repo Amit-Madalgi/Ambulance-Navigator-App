@@ -545,7 +545,7 @@ export default function MapContent({
             </Text>
           )}
         </TouchableOpacity>
-        {alertId && (
+        {/* alertId && (
           <TouchableOpacity
             style={[styles.vitalsBtn, { marginTop: 8 }]}
             onPress={() => router.push(`/vitals?id=${alertId}`)}
@@ -554,7 +554,7 @@ export default function MapContent({
               {"\u{1F48C}"} View Patient Vitals & Graph
             </Text>
           </TouchableOpacity>
-        )}
+        ) */}
       </View>
     </View>
   );
