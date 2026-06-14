@@ -5,25 +5,27 @@ import { AccessibilityInfo, Text, View, ViewStyle } from 'react-native';
 import { tva } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
 import {
-  Motion,
-  AnimatePresence,
-  MotionComponentProps,
-} from '@legendapp/motion';
-import {
   withStyleContext,
   useStyleContext,
 } from '@gluestack-ui/utils/nativewind-utils';
 import type { VariantProps } from '@gluestack-ui/utils/nativewind-utils';
 
-type IMotionViewProps = React.ComponentProps<typeof View> &
-  MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
+// Simple pass-through component to replace @legendapp/motion's AnimatePresence.
+// This fixes two issues:
+// 1. Motion.View's initial:{opacity:0} → animate:{opacity:1} transition fails
+//    silently with React 19 / RN 0.81, leaving toasts invisible.
+// 2. Passing null for AnimatePresence breaks OverlayAnimatePresence's exit logic,
+//    causing toasts to never disappear (removeToast never fires).
+// By providing a truthy component, OverlayAnimatePresence's internal Animated.timing
+// (duration: 0) runs correctly, properly cycling through entering→entered→exiting→exited
+// states and calling onExit → removeToast.
+const SimpleAnimatePresence = React.forwardRef<View, { children?: React.ReactNode }>(
+  ({ children }, ref) => <>{children}</>
+);
+SimpleAnimatePresence.displayName = 'SimpleAnimatePresence';
 
-const MotionView = Motion.View as React.ComponentType<IMotionViewProps>;
-
-const useToast = createToastHook(MotionView, AnimatePresence);
+const useToast = createToastHook(View, SimpleAnimatePresence);
 const SCOPE = 'TOAST';
-
-cssInterop(MotionView, { className: 'style' });
 
 const toastStyle = tva({
   base: 'p-4 m-1 rounded-md gap-1 web:pointer-events-auto shadow-hard-5 border-outline-100',

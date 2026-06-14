@@ -1,17 +1,19 @@
 # Debugging Notes for Next Session
 
-## 1. NativeWind Dark Mode Toggle Issue
-- **State**: The app is not toggling between Light and Dark mode dynamically via physical system settings (Expo Go).
-- **Current Implementation**: 
-  - `tailwind.config.js` is set to `darkMode: 'class'`.
-  - `app/_layout.tsx` is passing `mode={colorScheme}` into `GluestackUIProvider`.
-  - Backgrounds use `className="bg-background-light dark:bg-background-dark"` and typography uses `dark:text-typography-x`.
-- **Theory**: NativeWind cache in Expo Go often gets stuck. We need to do a hard shake-to-reload wipe on the device, or investigate if we should manually append the `.dark` class to the HTML root/RootView if `useColorScheme` is failing to pipe downward correctly in v4.
+## 1. ✅ NativeWind Dark Mode Toggle Issue — RESOLVED
+- **Root Cause**: `_layout.tsx` was hardcoding `mode="light"` on `GluestackUIProvider`, ignoring the device's system appearance setting entirely.
+- **Fix Applied** (`app/_layout.tsx`):
+  - Imported `useColorScheme` from `react-native` (aliased as `useDeviceColorScheme`).
+  - Passed `mode={deviceColorScheme === "dark" ? "dark" : "light"}` to `GluestackUIProvider`.
+  - Added `dark:bg-background-dark` className to the wrapper `<View>` for NativeWind dark mode class support.
+  - The `GluestackUIProvider` internally calls NativeWind's `setColorScheme(mode)` via `useEffect`, which propagates the `dark:` variant throughout the app.
+- **Note**: `tailwind.config.js` already has `darkMode: 'class'` and the `config.ts` already defines both light/dark CSS variable maps — no changes needed there.
 
-## 2. Gluestack UI Toast Not Firing
-- **State**: Replaced inline React state errors (`error && <Text>{error}</Text>`) with `useToast()` on both the Login (`index.tsx`) and Register (`register.tsx`) pages. The user reports the toast message is *not appearing* when form validation fails.
-- **Current Implementation**:
-  - `useToast` hook is called.
-  - `toast.show({ render: ({id}) => <Toast>... })` logic is inside the `handleLogin` and `handleRegister` functions.
-  - The Root `_layout.tsx` has `<ToastProvider>` inside `<OverlayProvider>` under `<GluestackUIProvider>`.
-- **Theory**: Gluestack Toast might require being wrapped in a specific Native View portal or the safe area context isn't calculating the absolute `"top"` placement properly, causing it to render invisibly off-screen. We need to test throwing a basic toast on mount to isolate the rendering issue.
+## 2. ✅ Gluestack UI Toast Not Firing — RESOLVED
+- **Root Cause**: `@legendapp/motion` v2.4.0's `Motion.View` and `AnimatePresence` have compatibility issues with React 19.1.0 / React Native 0.81.5. The `ToastList` uses `Motion.View` as the animation wrapper with `initial: { opacity: 0 }` → `animate: { opacity: 1 }`. When the animation transition fails silently, the toast renders at `opacity: 0` — technically present in the DOM but invisible.
+- **Fix Applied** (`components/ui/toast/index.tsx`):
+  - Replaced `createToastHook(MotionView, AnimatePresence)` with `createToastHook(View, null)`.
+  - Removed the `@legendapp/motion` imports entirely.
+  - `View` ignores the animation props (`initial`, `animate`, `exit`, `transition`) harmlessly, rendering the toast at full opacity immediately.
+  - Passing `null` for `AnimatePresence` causes `OverlayAnimatePresence` to fall back to `return children` (no wrapper), skipping the broken animation layer.
+  - **Trade-off**: Toast appears/disappears instantly without fade animation. This can be restored later by upgrading `@legendapp/motion` to a React 19-compatible version or implementing a lightweight `Animated.View` wrapper.
