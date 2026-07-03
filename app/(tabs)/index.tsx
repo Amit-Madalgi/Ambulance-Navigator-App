@@ -72,6 +72,8 @@ export default function HomeScreen() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [now, setNow] = useState(Date.now());
   const previousAlertIds = useRef<Set<string>>(new Set());
+  const preExistingAlertIds = useRef<Set<string>>(new Set());
+  const isFirstLoad = useRef(true);
   const navigation = useNavigation();
 
   // BLE wearable connection (auto-started by BLEProvider at the root level)
@@ -153,13 +155,24 @@ export default function HomeScreen() {
         alertsList.sort((a, b) => b.timestampMs - a.timestampMs);
         setAlerts(alertsList);
 
-        // Auto-remove expired pending alerts from Firebase
-        const currentTime = Date.now();
-        alertsList.forEach((alert) => {
-          if (alert.status !== "accepted" && (currentTime - alert.timestampMs) >= ALERT_EXPIRY_MS) {
-            remove(ref(database, `alerts/${alert.id}`)).catch(console.error);
-          }
-        });
+        if (isFirstLoad.current) {
+          // First load — record all existing alert IDs so they are exempt from timer
+          preExistingAlertIds.current = new Set(alertsList.map((a) => a.id));
+          isFirstLoad.current = false;
+        } else {
+          // Auto-disable expired NEW alerts only (skip pre-existing ones)
+          const currentTime = Date.now();
+          alertsList.forEach((alert) => {
+            if (
+              !preExistingAlertIds.current.has(alert.id) &&
+              alert.status !== "accepted" &&
+              alert.status !== "expired" &&
+              (currentTime - alert.timestampMs) >= ALERT_EXPIRY_MS
+            ) {
+              update(ref(database, `alerts/${alert.id}`), { status: "expired" }).catch(console.error);
+            }
+          });
+        }
 
         // (System-level notifications are now handled globally by useNotifications)
       } else {
@@ -281,11 +294,8 @@ export default function HomeScreen() {
     return "normal";
   }, [now]);
 
-  // Filter out expired pending alerts from display
-  const activeAlerts = alerts.filter((alert) => {
-    if (alert.status === "accepted") return true;
-    return (now - alert.timestampMs) < ALERT_EXPIRY_MS;
-  });
+  // Show all alerts — expired ones are displayed as disabled instead of being hidden
+  const activeAlerts = alerts;
 
   return (
     <View style={{ flex: 1 }} className="bg-background-light pt-12 px-4">
@@ -318,11 +328,14 @@ export default function HomeScreen() {
           <VStack space="md" className="pb-8">
             {activeAlerts.map((alert) => {
               const isAccepted = alert.status === "accepted";
-              const urgency = !isAccepted ? getCountdownUrgency(alert.timestampMs) : "normal";
+              const isExpired = alert.status === "expired";
+              const isPreExisting = preExistingAlertIds.current.has(alert.id);
+              const hasTimer = !isAccepted && !isExpired && !isPreExisting;
+              const urgency = hasTimer ? getCountdownUrgency(alert.timestampMs) : "normal";
               return (
                 <View
                   key={alert.id}
-                  className={`bg-white rounded-xl p-4 shadow-soft-1 border ${isAccepted ? "border-outline-100 opacity-60" : urgency === "critical" ? "border-error-300" : "border-outline-100"}`}
+                  className={`bg-white rounded-xl p-4 shadow-soft-1 border ${isAccepted || isExpired ? "border-outline-100 opacity-60" : urgency === "critical" ? "border-error-300" : "border-outline-100"}`}
                 >
                   <View className="flex-row justify-between items-start mb-2">
                     <VStack>
@@ -347,7 +360,7 @@ export default function HomeScreen() {
                   </View>
 
                   {/* Countdown timer — only for pending alerts */}
-                  {!isAccepted && (
+                  {hasTimer && (
                     <View className={`flex-row items-center justify-between px-3 py-2 rounded-lg mb-2 ${urgency === "critical" ? "bg-error-50 border border-error-200" : urgency === "warning" ? "bg-warning-50 border border-warning-200" : "bg-secondary-50 border border-outline-100"}`}>
                       <Text className={`text-[10px] font-bold uppercase tracking-wider ${urgency === "critical" ? "text-error-600" : urgency === "warning" ? "text-warning-700" : "text-secondary-500"}`}>
                         {urgency === "critical" ? "⚠ Expiring Soon" : "Expires In"}
@@ -396,6 +409,10 @@ export default function HomeScreen() {
                     {isAccepted ? (
                       <Text className="text-secondary-500 font-medium mr-2 mt-2">
                         Accepted
+                      </Text>
+                    ) : isExpired ? (
+                      <Text className="text-error-400 font-medium mr-2 mt-2">
+                        Expired
                       </Text>
                     ) : (
                       <>
