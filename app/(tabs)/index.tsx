@@ -8,7 +8,7 @@ import { useBLE } from "@/hooks/useBLEVitals";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { onValue, ref, remove, update } from "firebase/database";
+import { onValue, ref, update } from "firebase/database";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, View } from "react-native";
 import * as Location from "expo-location";
@@ -257,12 +257,12 @@ export default function HomeScreen() {
 
   const handleDecline = async (alertId: string) => {
     try {
-      await remove(ref(database, `alerts/${alertId}`));
+      await update(ref(database, `alerts/${alertId}`), { status: "declined" });
       toast.show({
         placement: "top",
         render: ({ id }) => (
           <Toast nativeID={id} action="info" variant="solid" className="mt-12">
-            <ToastTitle>Alert Declined &amp; Removed</ToastTitle>
+            <ToastTitle>Alert Declined</ToastTitle>
           </Toast>
         ),
       });
@@ -329,13 +329,15 @@ export default function HomeScreen() {
             {activeAlerts.map((alert) => {
               const isAccepted = alert.status === "accepted";
               const isExpired = alert.status === "expired";
+              const isDeclined = alert.status === "declined";
+              const isDisabled = isAccepted || isExpired || isDeclined;
               const isPreExisting = preExistingAlertIds.current.has(alert.id);
-              const hasTimer = !isAccepted && !isExpired && !isPreExisting;
+              const hasTimer = !isDisabled && !isPreExisting;
               const urgency = hasTimer ? getCountdownUrgency(alert.timestampMs) : "normal";
               return (
                 <View
                   key={alert.id}
-                  className={`bg-white rounded-xl p-4 shadow-soft-1 border ${isAccepted || isExpired ? "border-outline-100 opacity-60" : urgency === "critical" ? "border-error-300" : "border-outline-100"}`}
+                  className={`bg-white rounded-xl p-4 shadow-soft-1 border ${isDisabled ? "border-outline-100 opacity-60" : urgency === "critical" ? "border-error-300" : "border-outline-100"}`}
                 >
                   <View className="flex-row justify-between items-start mb-2">
                     <VStack>
@@ -413,6 +415,10 @@ export default function HomeScreen() {
                     ) : isExpired ? (
                       <Text className="text-error-400 font-medium mr-2 mt-2">
                         Expired
+                      </Text>
+                    ) : isDeclined ? (
+                      <Text className="text-secondary-400 font-medium mr-2 mt-2">
+                        Declined
                       </Text>
                     ) : (
                       <>

@@ -26,11 +26,11 @@ const alerts = [
     event: "accident",
     gpsValid: 1,
     gyroMagDps: 27.4,
-    heartRate: 0,
+    // heartRate: 0,
     lat: 15.8497,   // Belagavi Fort area
     lng: 74.4977,
-    spo2: 0,
-    timestampMs: Date.now() - 50000,
+    //spo2: 0,
+    timestampMs: Date.now(),
   },
   {
     accelMagG: 1.92,
@@ -38,11 +38,11 @@ const alerts = [
     event: "accident",
     gpsValid: 1,
     gyroMagDps: 19.6,
-    heartRate: 0,
+    //heartRate: 0,
     lat: 15.8281,   // Tilakwadi, Belagavi
     lng: 74.5042,
-    spo2: 0,
-    timestampMs: Date.now() - 70000,
+    //spo2: 0,
+    timestampMs: Date.now(),
   },
   {
     accelMagG: 3.45,
@@ -50,11 +50,11 @@ const alerts = [
     event: "accident",
     gpsValid: 1,
     gyroMagDps: 52.1,
-    heartRate: 0,
+    //heartRate: 0,
     lat: 15.8672,   // Vadgaon, Belagavi
     lng: 74.5083,
-    spo2: 0,
-    timestampMs: Date.now() - 40000,
+    //spo2: 0,
+    timestampMs: Date.now(),
   },
   {
     accelMagG: 1.68,
@@ -62,11 +62,11 @@ const alerts = [
     event: "accident",
     gpsValid: 1,
     gyroMagDps: 14.8,
-    heartRate: 0,
+    //heartRate: 0,
     lat: 15.8143,   // Shahapur, Belagavi
     lng: 74.4892,
-    spo2: 0,
-    timestampMs: Date.now() - 100000,
+    //spo2: 0,
+    timestampMs: Date.now(),
   },
   {
     accelMagG: 2.56,
@@ -74,11 +74,11 @@ const alerts = [
     event: "accident",
     gpsValid: 1,
     gyroMagDps: 33.7,
-    heartRate: 0,
+    //heartRate: 0,
     lat: 15.8392,   // College Road / KLE area, Belagavi
     lng: 74.5218,
-    spo2: 0,
-    timestampMs: Date.now() - 25000,
+    //spo2: 0,
+    timestampMs: Date.now(),
   },
 ];
 
