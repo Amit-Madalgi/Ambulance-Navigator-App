@@ -1,3 +1,5 @@
+Ambulance Navigator is a React Native mobile application built with Expo and TypeScript, developed as part of a four-module IoT-based Smart Emergency Response System consisting of an Accident Detection Module, a Smart Wearable Vitals Monitoring Module, an Ambulance Navigator App, and a Hospital Dashboard — all connected through Firebase Realtime Database. The app listens for crash alerts pushed by the Accident Detection Module, instantly notifies the ambulance driver, and on acceptance sets a multi-waypoint navigation route from the driver's current location to the crash site and then to the nearest hospital via Google Maps API. Accepting the alert also activates the Smart Wearable Vitals Monitoring Module to begin streaming live patient vitals to Firebase. Built with NativeWind and Gluestack UI, the app runs on both Android and iOS from a single codebase.
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
